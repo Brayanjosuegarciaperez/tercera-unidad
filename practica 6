@@ -1,0 +1,54 @@
+#include <Wire.h>
+#include <SparkFun_ADXL345.h>
+#include <Servo.h>
+
+Servo servo_x;  // Cambié el nombre de la variable servo_horizontal a servo_x
+Servo servo_y;  // Cambié el nombre de la variable servo_vertical a servo_y
+ADXL345 adxl;
+
+int mappedRawX, mappedRawY;  // Cambié el nombre de las variables mappedRawX y mappedejeY
+
+void setup() {
+  initialize();
+  configureServos();
+  waitForInitialization();
+}
+
+void loop() {
+  readAccelerometer();
+  updateServos();
+  waitFor(100);
+}
+
+void initialize() {
+  Serial.begin(9600);
+  adxl.powerOn();
+  adxl.setRangeSetting(2);
+}
+
+void configureServos() {
+  servo_x.attach(7);  // Cambié el pin del servo horizontal a 7
+  servo_y.attach(6);  // Cambié el pin del servo vertical a 6
+  servo_x.write(90);
+  servo_y.write(90);
+}
+
+void waitForInitialization() {
+  delay(2000);
+}
+
+void readAccelerometer() {
+  int axisX, axisY, axisZ;  // Cambié el nombre de las variables ejeX, ejeY y ejeZ
+  adxl.readAccel(&axisX, &axisY, &axisZ);
+  mappedRawX = map(axisX, -255, 255, 179, 0);
+  mappedRawY = map(axisY, -255, 255, 0, 179);
+}
+
+void updateServos() {
+  servo_x.write(mappedRawX);
+  servo_y.write(mappedRawY);
+}
+
+void waitFor(int ms) {
+  delay(ms);
+}
