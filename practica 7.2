@@ -1,0 +1,80 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+
+// Pines de los pulsadores para cambiar entre modos
+#define VOLTMETER_BUTTON_PIN 2
+#define AMPERMETER_BUTTON_PIN 3
+
+// Pines del sensor de voltaje
+#define VOLTAGE_SENSOR_PIN A0
+#define VOLTAGE_REFERENCE 5.0 // Voltaje de referencia utilizado para el sensor de voltaje
+#define SCL A5
+#define SDA A4
+// Pines del sensor de corriente
+#define CURRENT_SENSOR_PIN A1
+#define CURRENT_REFERENCE 2.5 // Corriente de referencia utilizada para el sensor de corriente
+#define ACS712_SENSITIVITY 0.185 // Sensibilidad del sensor ACS712 en mV/A
+int lectura = 0;
+int lectura2 = 0;
+// Dirección I2C de la pantalla LCD
+#define LCD_ADDRESS 0x27
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  pinMode(VOLTMETER_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(AMPERMETER_BUTTON_PIN, INPUT_PULLUP);
+  
+  lcd.clear();
+  lcd.setCursor(0, 0);//numerios visibles del LCD
+  lcd.print("Modo Voltimetro");    // Muestra texto Listo
+  lcd.init();
+  lcd.backlight();
+}
+
+void loop() {
+  int voltmeterButtonState = digitalRead(VOLTMETER_BUTTON_PIN);
+  int ampermeterButtonState = digitalRead(AMPERMETER_BUTTON_PIN);
+  
+  if (voltmeterButtonState == LOW) {
+    lectura = analogRead(VOLTAGE_SENSOR_PIN);
+    lcd.println(lectura);
+    lcd.clear();
+    lcd.print("Modo: Voltimetro");
+    float voltage = obtenerVoltaje();
+    mostrarVoltaje(voltage);
+  } else if (ampermeterButtonState == LOW) {
+    lcd.clear();
+    lcd.print("Modo: Amperimetro");
+    float current = obtenerCorriente();
+    mostrarCorriente(current);
+  }
+}
+
+float obtenerVoltaje() {
+  int sensorValue = analogRead(VOLTAGE_SENSOR_PIN);
+  float voltage = (sensorValue *4.85 / 1023.0) * VOLTAGE_REFERENCE;
+  return voltage;
+}
+
+float obtenerCorriente() {
+  int sensorValue = analogRead(CURRENT_SENSOR_PIN);
+  float voltage = (sensorValue / 1023.0) * VOLTAGE_REFERENCE;
+  float current = (voltage - CURRENT_REFERENCE) / ACS712_SENSITIVITY;
+  return current;
+}
+
+void mostrarVoltaje(float voltage) {
+  lcd.setCursor(0, 1);
+  lcd.print("Voltaje: ");
+  lcd.print(voltage);
+  lcd.print(" V");
+}
+
+void mostrarCorriente(float current) {
+  lcd.setCursor(0, 1);
+  lcd.print("Corriente: ");
+  lcd.print(current);
+  lcd.print(" A");
+}
